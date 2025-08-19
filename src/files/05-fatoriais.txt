@@ -1,0 +1,7 @@
+1
+2
+6
+O número informado é zero ou negativo
+24
+120
+720
