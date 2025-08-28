@@ -1,5 +1,6 @@
 from enum import Enum, IntEnum, auto
 from datetime import date
+from dataclasses import dataclass, InitVar
 
 class Prioridade(IntEnum):
     BAIXA = auto()
@@ -11,6 +12,10 @@ class Prioridade(IntEnum):
 
 #Descritores
 class NaoVazio:
+    """ 
+        Valida strings não vazias 
+        Não aceita strings só com espaços
+    """
     def __set_name__(self, owner, name):
         self.private_name = '_' + name
     
@@ -21,8 +26,8 @@ class NaoVazio:
 
     def __set__(self, obj, value):
         if not(isinstance(value, str)):
-            raise ValueError('Precisa ser string')
-        
+            raise ValueError('{self.name} precisa ser do tipo string')
+
         if len(value) == 0:
             raise ValueError('Não recebe string vazia')
         
@@ -35,6 +40,10 @@ class NaoVazio:
         return setattr(obj, self.private_name, value)
 
 class DataNaoPassada:
+    """
+        Valida datas (datetime.date) que não estão no passado
+        Aceita hoje como válido
+    """
     def __set_name__(self, owner, name):
         self.private_name = '_' + name
     
@@ -50,13 +59,44 @@ class DataNaoPassada:
             raise ValueError('Não aceita datas anteriores a hoje')
         return setattr(obj, self.private_name, value)
 
-class Teste:
+@dataclass
+class Tarefa:
     nome = NaoVazio()
-    data = DataNaoPassada()
+    prazo = DataNaoPassada()
 
-    def __init__(self, nome, data):
-        self.nome = nome
-        self.data = data
+    _nome = InitVar[str]
+    _prazo = InitVar[date]
 
-if __name__ == '__main__':
+    prioridade: Prioridade = Prioridade.MEDIA
+    concluida: bool = False
+
+    def __post_init__(self, _nome: str, _prazo: date):
+        if not(isinstance(self.prioridade, Prioridade)):
+            raise ValueError('A prioridade deve ser do tipo Prioridade')
+        self.nome = _nome
+        self.prazo = _prazo
+    
+    def __str__(self):
+        concluida_aux = '✓' if self.concluida else 'x'
+        return f'[{self.prioridade.name}] {self.prazo.isoformat()} {self.nome} (concluida: ✓/{concluida_aux} )'
+
+class GerenciadorTarefas:
+    def __init__(self):
+        self.tarefa = [] #lista de Tarefas
+
+    def adicionar_tarefas(self, tarefa: Tarefa):
+        if not(isinstance(tarefa, Tarefa)):
+            raise ValueError('A tarefa precisa ser do tipo Tarefa')
+        self.tarefa.append(tarefa)
+        
+    def _parse_bool(s:str) -> bool:
+        if not(isinstance(s,str)):
+            raise ValueError('A entrada precisa ser do tipo string')
+        
+        return True if s.lower() in ['s','sim','1','true'] else False
+
+def main():
     ...
+    
+if __name__ == '__main__':
+    main()
